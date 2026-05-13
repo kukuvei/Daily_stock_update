@@ -38,7 +38,7 @@
               Dashboard Stock Online Sales
             </h1>
             <p class="mt-1 text-sm text-slate-500">
-              Admin upload stok Excel setiap pagi. Sales langsung cek stok terbaru secara online.
+              Sales wajib login. Hanya akun yang terdaftar di kantor yang bisa melihat stock.
             </p>
           </div>
 
@@ -65,122 +65,164 @@
       <section id="statusBox" class="hidden mb-5 rounded-xl border px-4 py-3 text-sm"></section>
 
       <section id="salesSection">
-        <section class="grid grid-cols-1 gap-4 md:grid-cols-5">
-          <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p class="text-sm font-medium text-slate-500">Total SKU</p>
-            <p id="totalSku" class="mt-2 text-3xl font-bold text-slate-900">0</p>
-          </div>
+        <section id="salesAuthCard" class="mb-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <h2 class="text-lg font-bold text-slate-900">Akses Sales</h2>
+              <p class="mt-1 text-sm text-slate-500">
+                Login dengan akun sales yang sudah didaftarkan oleh kantor.
+              </p>
+            </div>
 
-          <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p class="text-sm font-medium text-slate-500">Total Stock</p>
-            <p id="totalStock" class="mt-2 text-3xl font-bold text-slate-900">0</p>
-          </div>
-
-          <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p class="text-sm font-medium text-slate-500">Stock Aman</p>
-            <p id="safeStock" class="mt-2 text-3xl font-bold text-emerald-600">0</p>
-          </div>
-
-          <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p class="text-sm font-medium text-slate-500">Stock Rendah</p>
-            <p id="lowStock" class="mt-2 text-3xl font-bold text-amber-600">0</p>
-          </div>
-
-          <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p class="text-sm font-medium text-slate-500">Stock Kosong</p>
-            <p id="emptyStock" class="mt-2 text-3xl font-bold text-rose-600">0</p>
-          </div>
-        </section>
-
-        <section class="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div class="grid grid-cols-1 gap-3 lg:grid-cols-5">
-            <div class="lg:col-span-2">
-              <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Cari Barang</label>
+            <div id="salesLoginBox" class="w-full max-w-md space-y-3">
               <input
-                id="searchInput"
-                type="search"
-                placeholder="Cari nama barang, kode, gudang, group..."
+                id="salesEmail"
+                type="email"
+                placeholder="Email sales"
                 class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100"
               />
+              <input
+                id="salesPassword"
+                type="password"
+                placeholder="Password"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100"
+              />
+              <button id="salesLoginBtn" class="w-full rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">
+                Login Sales
+              </button>
             </div>
 
-            <div>
-              <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Status Stock</label>
-              <select id="statusFilter" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100">
-                <option value="all">Semua Status</option>
-                <option value="available">Stock Tersedia</option>
-                <option value="safe">Stock Aman</option>
-                <option value="low">Stock Rendah</option>
-                <option value="empty">Stock Kosong</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Gudang</label>
-              <select id="warehouseFilter" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100">
-                <option value="all">Semua Gudang</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Group / Brand</label>
-              <select id="categoryFilter" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100">
-                <option value="all">Semua Group</option>
-              </select>
+            <div id="salesLoggedInBox" class="hidden w-full max-w-md rounded-xl bg-emerald-50 p-4 text-sm text-emerald-800">
+              <p id="salesLoggedInText" class="font-semibold">Sudah login.</p>
+              <button id="salesLogoutBtn" class="mt-3 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
+                Logout
+              </button>
             </div>
           </div>
 
-          <div class="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p id="lastUpdateText" class="text-sm text-slate-500">Update terakhir: -</p>
-
-            <div class="flex flex-col gap-2 sm:flex-row">
-              <button id="clearFilterBtn" class="rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200">
-                Reset Filter
-              </button>
-              <button id="exportCsvBtn" class="rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-900">
-                Export CSV
-              </button>
-              <select id="pageSizeSelect" class="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100">
-                <option value="10">10 / halaman</option>
-                <option value="25" selected>25 / halaman</option>
-                <option value="50">50 / halaman</option>
-                <option value="100">100 / halaman</option>
-              </select>
-            </div>
+          <div id="salesDeniedBox" class="mt-4 hidden rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+            Akun ini belum terdaftar sebagai sales aktif kantor. Hubungi admin untuk memasukkan email ini ke daftar sales.
           </div>
         </section>
 
-        <section class="mt-5 rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200">
-              <thead class="bg-slate-50">
-                <tr>
-                  <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Kode</th>
-                  <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Nama Barang</th>
-                  <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Stock</th>
-                  <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Konversi</th>
-                  <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Gudang</th>
-                  <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Group</th>
-                  <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Status</th>
-                </tr>
-              </thead>
-              <tbody id="tableBody" class="divide-y divide-slate-100 bg-white"></tbody>
-            </table>
-          </div>
-
-          <div class="flex flex-col gap-3 border-t border-slate-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <p id="tableInfo" class="text-sm text-slate-500">Menampilkan 0 data</p>
-            <div class="flex items-center gap-2">
-              <button id="prevPageBtn" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
-                Sebelumnya
-              </button>
-              <span id="pageIndicator" class="min-w-24 text-center text-sm font-semibold text-slate-700">1 / 1</span>
-              <button id="nextPageBtn" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
-                Berikutnya
-              </button>
+        <div id="salesDashboardContent" class="hidden">
+          <section class="grid grid-cols-1 gap-4 md:grid-cols-5">
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <p class="text-sm font-medium text-slate-500">Total SKU</p>
+              <p id="totalSku" class="mt-2 text-3xl font-bold text-slate-900">0</p>
             </div>
-          </div>
-        </section>
+
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <p class="text-sm font-medium text-slate-500">Total Stock</p>
+              <p id="totalStock" class="mt-2 text-3xl font-bold text-slate-900">0</p>
+            </div>
+
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <p class="text-sm font-medium text-slate-500">Stock Aman</p>
+              <p id="safeStock" class="mt-2 text-3xl font-bold text-emerald-600">0</p>
+            </div>
+
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <p class="text-sm font-medium text-slate-500">Stock Rendah</p>
+              <p id="lowStock" class="mt-2 text-3xl font-bold text-amber-600">0</p>
+            </div>
+
+            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <p class="text-sm font-medium text-slate-500">Stock Kosong</p>
+              <p id="emptyStock" class="mt-2 text-3xl font-bold text-rose-600">0</p>
+            </div>
+          </section>
+
+          <section class="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div class="grid grid-cols-1 gap-3 lg:grid-cols-5">
+              <div class="lg:col-span-2">
+                <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Cari Barang</label>
+                <input
+                  id="searchInput"
+                  type="search"
+                  placeholder="Cari nama barang, kode, gudang, group..."
+                  class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100"
+                />
+              </div>
+
+              <div>
+                <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Status Stock</label>
+                <select id="statusFilter" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100">
+                  <option value="all">Semua Status</option>
+                  <option value="available">Stock Tersedia</option>
+                  <option value="safe">Stock Aman</option>
+                  <option value="low">Stock Rendah</option>
+                  <option value="empty">Stock Kosong</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Gudang</label>
+                <select id="warehouseFilter" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100">
+                  <option value="all">Semua Gudang</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Group / Brand</label>
+                <select id="categoryFilter" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100">
+                  <option value="all">Semua Group</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p id="lastUpdateText" class="text-sm text-slate-500">Update terakhir: -</p>
+
+              <div class="flex flex-col gap-2 sm:flex-row">
+                <button id="clearFilterBtn" class="rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200">
+                  Reset Filter
+                </button>
+                <button id="exportCsvBtn" class="rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-900">
+                  Export CSV
+                </button>
+                <select id="pageSizeSelect" class="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100">
+                  <option value="10">10 / halaman</option>
+                  <option value="25" selected>25 / halaman</option>
+                  <option value="50">50 / halaman</option>
+                  <option value="100">100 / halaman</option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          <section class="mt-5 rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-slate-200">
+                <thead class="bg-slate-50">
+                  <tr>
+                    <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Kode</th>
+                    <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Nama Barang</th>
+                    <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Stock</th>
+                    <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Konversi</th>
+                    <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Gudang</th>
+                    <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Group</th>
+                    <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="tableBody" class="divide-y divide-slate-100 bg-white"></tbody>
+              </table>
+            </div>
+
+            <div class="flex flex-col gap-3 border-t border-slate-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <p id="tableInfo" class="text-sm text-slate-500">Menampilkan 0 data</p>
+              <div class="flex items-center gap-2">
+                <button id="prevPageBtn" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
+                  Sebelumnya
+                </button>
+                <span id="pageIndicator" class="min-w-24 text-center text-sm font-semibold text-slate-700">1 / 1</span>
+                <button id="nextPageBtn" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
+                  Berikutnya
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
       </section>
 
       <section id="adminSection" class="hidden">
@@ -282,6 +324,13 @@
       records: [],
       meta: null,
       session: null,
+      userAccess: {
+        isAdmin: false,
+        isSales: false,
+        salesActive: false,
+        salesName: "",
+        salesEmail: ""
+      },
       previewRecords: [],
       previewPeriod: "",
       previewSourceFile: "",
@@ -305,6 +354,16 @@
       refreshBtn: document.getElementById("refreshBtn"),
       salesSection: document.getElementById("salesSection"),
       adminSection: document.getElementById("adminSection"),
+
+      salesDashboardContent: document.getElementById("salesDashboardContent"),
+      salesLoginBox: document.getElementById("salesLoginBox"),
+      salesLoggedInBox: document.getElementById("salesLoggedInBox"),
+      salesDeniedBox: document.getElementById("salesDeniedBox"),
+      salesEmail: document.getElementById("salesEmail"),
+      salesPassword: document.getElementById("salesPassword"),
+      salesLoginBtn: document.getElementById("salesLoginBtn"),
+      salesLogoutBtn: document.getElementById("salesLogoutBtn"),
+      salesLoggedInText: document.getElementById("salesLoggedInText"),
 
       totalSku: document.getElementById("totalSku"),
       totalStock: document.getElementById("totalStock"),
@@ -359,13 +418,22 @@
       }
 
       await loadSession();
-      await loadStockData();
+
+      if (canViewStock()) {
+        await loadStockData();
+      }
     }
 
     function bindEvents() {
       el.salesModeBtn.addEventListener("click", () => switchMode("sales"));
       el.adminModeBtn.addEventListener("click", () => switchMode("admin"));
       el.refreshBtn.addEventListener("click", loadStockData);
+
+      el.salesLoginBtn.addEventListener("click", () => {
+        loginWithEmailPassword(el.salesEmail.value, el.salesPassword.value);
+      });
+
+      el.salesLogoutBtn.addEventListener("click", logoutUser);
 
       el.searchInput.addEventListener("input", () => {
         state.search = el.searchInput.value.trim().toLowerCase();
@@ -415,8 +483,11 @@
         }
       });
 
-      el.loginBtn.addEventListener("click", loginAdmin);
-      el.logoutBtn.addEventListener("click", logoutAdmin);
+      el.loginBtn.addEventListener("click", () => {
+        loginWithEmailPassword(el.adminEmail.value, el.adminPassword.value);
+      });
+
+      el.logoutBtn.addEventListener("click", logoutUser);
       el.excelInput.addEventListener("change", handleExcelUpload);
       el.publishBtn.addEventListener("click", publishPreviewRecords);
     }
@@ -441,25 +512,59 @@
     }
 
     /**************************************************************************
-     * 6. SUPABASE AUTH
+     * 6. SUPABASE AUTH DAN CEK AKSES
      **************************************************************************/
     async function loadSession() {
       const { data } = await sb.auth.getSession();
       state.session = data.session || null;
+      await refreshUserAccess();
       renderAuthState();
 
-      sb.auth.onAuthStateChange((_event, session) => {
+      sb.auth.onAuthStateChange(async (_event, session) => {
         state.session = session;
+        await refreshUserAccess();
         renderAuthState();
+
+        if (canViewStock()) {
+          await loadStockData();
+        } else {
+          clearStockData();
+        }
       });
     }
 
-    async function loginAdmin() {
-      const email = el.adminEmail.value.trim();
-      const password = el.adminPassword.value;
+    async function refreshUserAccess() {
+      state.userAccess = {
+        isAdmin: false,
+        isSales: false,
+        salesActive: false,
+        salesName: "",
+        salesEmail: ""
+      };
+
+      const user = state.session?.user;
+      if (!user) return;
+
+      const [adminResult, salesResult] = await Promise.all([
+        sb.from("app_admins").select("user_id").eq("user_id", user.id).maybeSingle(),
+        sb.from("sales_users").select("user_id, full_name, email, active").eq("user_id", user.id).maybeSingle()
+      ]);
+
+      state.userAccess.isAdmin = Boolean(adminResult.data);
+      state.userAccess.isSales = Boolean(salesResult.data);
+      state.userAccess.salesActive = Boolean(salesResult.data?.active);
+      state.userAccess.salesName = salesResult.data?.full_name || "";
+      state.userAccess.salesEmail = salesResult.data?.email || user.email || "";
+    }
+
+    async function loginWithEmailPassword(emailValue, passwordValue) {
+      if (!isConfigReady) return;
+
+      const email = cleanCell(emailValue).toLowerCase();
+      const password = passwordValue;
 
       if (!email || !password) {
-        showStatus("Isi email dan password admin.", "warning");
+        showStatus("Isi email dan password.", "warning");
         return;
       }
 
@@ -471,28 +576,69 @@
       }
 
       state.session = data.session;
-      el.adminPassword.value = "";
+      await refreshUserAccess();
       renderAuthState();
-      showStatus("Login admin berhasil.", "success");
+
+      el.adminPassword.value = "";
+      el.salesPassword.value = "";
+
+      if (canViewStock()) {
+        await loadStockData();
+        showStatus("Login berhasil.", "success");
+      } else {
+        clearStockData();
+        showStatus("Login berhasil, tetapi akun ini belum terdaftar sebagai sales aktif atau admin.", "warning");
+      }
     }
 
-    async function logoutAdmin() {
+    async function logoutUser() {
+      if (!isConfigReady) return;
+
       await sb.auth.signOut();
       state.session = null;
+      await refreshUserAccess();
+      clearStockData();
       renderAuthState();
       showStatus("Logout berhasil.", "success");
     }
 
+    function canViewStock() {
+      return Boolean(state.session && (state.userAccess.isAdmin || state.userAccess.salesActive));
+    }
+
     function renderAuthState() {
       const user = state.session?.user;
+      const canView = canViewStock();
+      const roleLabel = state.userAccess.isAdmin
+        ? "Admin"
+        : state.userAccess.salesActive
+          ? "Sales aktif"
+          : "Belum terdaftar";
 
       if (user) {
+        el.salesLoginBox.classList.add("hidden");
+        el.salesLoggedInBox.classList.remove("hidden");
+        el.salesLoggedInText.textContent = `Login sebagai ${user.email} · ${roleLabel}`;
+
         el.loginBox.classList.add("hidden");
         el.loggedInBox.classList.remove("hidden");
-        el.loggedInText.textContent = `Login sebagai ${user.email}`;
+        el.loggedInText.textContent = `Login sebagai ${user.email} · ${roleLabel}`;
       } else {
+        el.salesLoginBox.classList.remove("hidden");
+        el.salesLoggedInBox.classList.add("hidden");
         el.loginBox.classList.remove("hidden");
         el.loggedInBox.classList.add("hidden");
+      }
+
+      if (!user) {
+        el.salesDeniedBox.classList.add("hidden");
+        el.salesDashboardContent.classList.add("hidden");
+      } else if (canView) {
+        el.salesDeniedBox.classList.add("hidden");
+        el.salesDashboardContent.classList.remove("hidden");
+      } else {
+        el.salesDeniedBox.classList.remove("hidden");
+        el.salesDashboardContent.classList.add("hidden");
       }
     }
 
@@ -501,6 +647,12 @@
      **************************************************************************/
     async function loadStockData() {
       if (!isConfigReady) return;
+
+      if (!canViewStock()) {
+        showStatus("Silakan login dengan akun sales aktif atau admin untuk melihat stock.", "warning");
+        clearStockData();
+        return;
+      }
 
       showStatus("Memuat data stock online...", "success");
 
@@ -526,6 +678,13 @@
 
       renderAll();
       showStatus(`Data stock berhasil dimuat. Total ${state.records.length.toLocaleString("id-ID")} baris.`, "success");
+    }
+
+    function clearStockData() {
+      state.records = [];
+      state.meta = null;
+      state.page = 1;
+      renderAll();
     }
 
     function normalizeOnlineRecord(row) {
@@ -813,6 +972,11 @@
         return;
       }
 
+      if (!state.userAccess.isAdmin) {
+        showStatus("Akun ini bukan admin. Hanya admin yang boleh publish stock.", "error");
+        return;
+      }
+
       if (!state.previewRecords.length) {
         showStatus("Tidak ada data preview untuk dipublish.", "warning");
         return;
@@ -870,6 +1034,7 @@
       renderCards();
       renderTable();
       renderPreview();
+      renderAuthState();
     }
 
     function renderCards() {

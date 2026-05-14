@@ -1,1219 +1,211 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard Stock Online Sales</title>
+      <div class="flex flex-wrap gap-2">
+        <button id="salesModeBtn" class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">
+          Mode Sales
+        </button>
+        <button id="adminModeBtn" class="rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-900">
+          Mode Admin
+        </button>
+        <button id="refreshBtn" class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
+          Refresh Data
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+  <section id="configWarning" class="hidden mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+    Supabase belum dikonfigurasi. Edit file HTML, lalu isi SUPABASE_URL dan SUPABASE_KEY.
+  </section>
 
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              50: "#eff6ff",
-              100: "#dbeafe",
-              600: "#2563eb",
-              700: "#1d4ed8",
-              900: "#172554"
-            }
-          }
-        }
-      }
-    };
-  </script>
-</head>
+  <section id="statusBox" class="hidden mb-5 rounded-xl border px-4 py-3 text-sm"></section>
 
-<body class="bg-slate-100 text-slate-800">
-  <div class="min-h-screen">
-    <header class="border-b border-slate-200 bg-white">
-      <div class="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <h1 class="text-2xl font-bold tracking-tight text-slate-900">
-              Dashboard Stock Online Sales
-            </h1>
-            <p class="mt-1 text-sm text-slate-500">
-              Admin upload stok Excel setiap pagi. Sales langsung cek stok terbaru secara online.
-            </p>
-          </div>
+  <section id="salesSection">
+    <section class="grid grid-cols-1 gap-4 md:grid-cols-5">
+      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <p class="text-sm font-medium text-slate-500">Total SKU</p>
+        <p id="totalSku" class="mt-2 text-3xl font-bold text-slate-900">0</p>
+      </div>
 
-          <div class="flex flex-wrap gap-2">
-            <button id="salesModeBtn" class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">
-              Mode Sales
-            </button>
-            <button id="adminModeBtn" class="rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-900">
-              Mode Admin
-            </button>
-            <button id="refreshBtn" class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
-              Refresh Data
-            </button>
-          </div>
+      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <p class="text-sm font-medium text-slate-500">Total Stock</p>
+        <p id="totalStock" class="mt-2 text-3xl font-bold text-slate-900">0</p>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <p class="text-sm font-medium text-slate-500">Stock Aman</p>
+        <p id="safeStock" class="mt-2 text-3xl font-bold text-emerald-600">0</p>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <p class="text-sm font-medium text-slate-500">Stock Rendah</p>
+        <p id="lowStock" class="mt-2 text-3xl font-bold text-amber-600">0</p>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <p class="text-sm font-medium text-slate-500">Stock Kosong</p>
+        <p id="emptyStock" class="mt-2 text-3xl font-bold text-rose-600">0</p>
+      </div>
+    </section>
+
+    <section class="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div class="grid grid-cols-1 gap-3 lg:grid-cols-5">
+        <div class="lg:col-span-2">
+          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Cari Barang</label>
+          <input
+            id="searchInput"
+            type="search"
+            placeholder="Cari nama barang, kode, gudang, group..."
+            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100"
+          />
+        </div>
+
+        <div>
+          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Status Stock</label>
+          <select id="statusFilter" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100">
+            <option value="all">Semua Status</option>
+            <option value="available">Stock Tersedia</option>
+            <option value="safe">Stock Aman</option>
+            <option value="low">Stock Rendah</option>
+            <option value="empty">Stock Kosong</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Gudang</label>
+          <select id="warehouseFilter" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100">
+            <option value="all">Semua Gudang</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Group / Brand</label>
+          <select id="categoryFilter" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100">
+            <option value="all">Semua Group</option>
+          </select>
         </div>
       </div>
-    </header>
 
-    <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-      <section id="configWarning" class="hidden mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-        Supabase belum dikonfigurasi. Edit file HTML, lalu isi SUPABASE_URL dan SUPABASE_KEY.
-      </section>
+      <div class="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p id="lastUpdateText" class="text-sm text-slate-500">Update terakhir: -</p>
 
-      <section id="statusBox" class="hidden mb-5 rounded-xl border px-4 py-3 text-sm"></section>
+        <div class="flex flex-col gap-2 sm:flex-row">
+          <button id="clearFilterBtn" class="rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200">
+            Reset Filter
+          </button>
+          <button id="exportCsvBtn" class="rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-900">
+            Export CSV
+          </button>
+          <select id="pageSizeSelect" class="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100">
+            <option value="10">10 / halaman</option>
+            <option value="25" selected>25 / halaman</option>
+            <option value="50">50 / halaman</option>
+            <option value="100">100 / halaman</option>
+          </select>
+        </div>
+      </div>
+    </section>
 
-      <section id="salesSection">
-        <section class="grid grid-cols-1 gap-4 md:grid-cols-5">
-          <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p class="text-sm font-medium text-slate-500">Total SKU</p>
-            <p id="totalSku" class="mt-2 text-3xl font-bold text-slate-900">0</p>
-          </div>
+    <section class="mt-5 rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-200">
+          <thead class="bg-slate-50">
+            <tr>
+              <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Kode</th>
+              <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Nama Barang</th>
+              <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Stock</th>
+              <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Konversi</th>
+              <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Gudang</th>
+              <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Group</th>
+              <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Status</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody" class="divide-y divide-slate-100 bg-white"></tbody>
+        </table>
+      </div>
 
-          <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p class="text-sm font-medium text-slate-500">Total Stock</p>
-            <p id="totalStock" class="mt-2 text-3xl font-bold text-slate-900">0</p>
-          </div>
+      <div class="flex flex-col gap-3 border-t border-slate-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <p id="tableInfo" class="text-sm text-slate-500">Menampilkan 0 data</p>
+        <div class="flex items-center gap-2">
+          <button id="prevPageBtn" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
+            Sebelumnya
+          </button>
+          <span id="pageIndicator" class="min-w-24 text-center text-sm font-semibold text-slate-700">1 / 1</span>
+          <button id="nextPageBtn" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
+            Berikutnya
+          </button>
+        </div>
+      </div>
+    </section>
+  </section>
 
-          <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p class="text-sm font-medium text-slate-500">Stock Aman</p>
-            <p id="safeStock" class="mt-2 text-3xl font-bold text-emerald-600">0</p>
-          </div>
+  <section id="adminSection" class="hidden">
+    <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+      <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 class="text-lg font-bold text-slate-900">Login Admin</h2>
+        <p class="mt-1 text-sm text-slate-500">Login diperlukan untuk upload dan publish stock terbaru.</p>
 
-          <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p class="text-sm font-medium text-slate-500">Stock Rendah</p>
-            <p id="lowStock" class="mt-2 text-3xl font-bold text-amber-600">0</p>
-          </div>
-
-          <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p class="text-sm font-medium text-slate-500">Stock Kosong</p>
-            <p id="emptyStock" class="mt-2 text-3xl font-bold text-rose-600">0</p>
-          </div>
-        </section>
-
-        <section class="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div class="grid grid-cols-1 gap-3 lg:grid-cols-5">
-            <div class="lg:col-span-2">
-              <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Cari Barang</label>
-              <input
-                id="searchInput"
-                type="search"
-                placeholder="Cari nama barang, kode, gudang, group..."
-                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100"
-              />
-            </div>
-
-            <div>
-              <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Status Stock</label>
-              <select id="statusFilter" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100">
-                <option value="all">Semua Status</option>
-                <option value="available">Stock Tersedia</option>
-                <option value="safe">Stock Aman</option>
-                <option value="low">Stock Rendah</option>
-                <option value="empty">Stock Kosong</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Gudang</label>
-              <select id="warehouseFilter" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100">
-                <option value="all">Semua Gudang</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Group / Brand</label>
-              <select id="categoryFilter" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100">
-                <option value="all">Semua Group</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p id="lastUpdateText" class="text-sm text-slate-500">Update terakhir: -</p>
-
-            <div class="flex flex-col gap-2 sm:flex-row">
-              <button id="clearFilterBtn" class="rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200">
-                Reset Filter
-              </button>
-              <button id="exportCsvBtn" class="rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-900">
-                Export CSV
-              </button>
-              <select id="pageSizeSelect" class="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100">
-                <option value="10">10 / halaman</option>
-                <option value="25" selected>25 / halaman</option>
-                <option value="50">50 / halaman</option>
-                <option value="100">100 / halaman</option>
-              </select>
-            </div>
-          </div>
-        </section>
-
-        <section class="mt-5 rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200">
-              <thead class="bg-slate-50">
-                <tr>
-                  <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Kode</th>
-                  <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Nama Barang</th>
-                  <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Stock</th>
-                  <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Konversi</th>
-                  <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Gudang</th>
-                  <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Group</th>
-                  <th class="whitespace-nowrap px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Status</th>
-                </tr>
-              </thead>
-              <tbody id="tableBody" class="divide-y divide-slate-100 bg-white"></tbody>
-            </table>
-          </div>
-
-          <div class="flex flex-col gap-3 border-t border-slate-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <p id="tableInfo" class="text-sm text-slate-500">Menampilkan 0 data</p>
-            <div class="flex items-center gap-2">
-              <button id="prevPageBtn" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
-                Sebelumnya
-              </button>
-              <span id="pageIndicator" class="min-w-24 text-center text-sm font-semibold text-slate-700">1 / 1</span>
-              <button id="nextPageBtn" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">
-                Berikutnya
-              </button>
-            </div>
-          </div>
-        </section>
-      </section>
-
-      <section id="adminSection" class="hidden">
-        <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
-          <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 class="text-lg font-bold text-slate-900">Login Admin</h2>
-            <p class="mt-1 text-sm text-slate-500">Login diperlukan untuk upload dan publish stock terbaru.</p>
-
-            <div id="loginBox" class="mt-4 space-y-3">
-              <input id="adminEmail" type="email" placeholder="Email admin" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100" />
-              <input id="adminPassword" type="password" placeholder="Password" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100" />
-              <button id="loginBtn" class="w-full rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">
-                Login Admin
-              </button>
-            </div>
-
-            <div id="loggedInBox" class="mt-4 hidden rounded-xl bg-emerald-50 p-4 text-sm text-emerald-800">
-              <p id="loggedInText" class="font-semibold">Sudah login.</p>
-              <button id="logoutBtn" class="mt-3 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
-                Logout
-              </button>
-            </div>
-          </section>
-
-          <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 class="text-lg font-bold text-slate-900">Upload Excel Stock</h2>
-            <p class="mt-1 text-sm text-slate-500">Upload file LAPORAN REKAP STOK. Data lama akan diganti setelah klik Publish.</p>
-
-            <div class="mt-4 space-y-3">
-              <label class="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center hover:bg-slate-100">
-                <span class="text-sm font-semibold text-slate-700">Klik untuk pilih file Excel</span>
-                <span class="mt-1 text-xs text-slate-500">Format .xlsx, .xls, atau .csv</span>
-                <input id="excelInput" type="file" accept=".xlsx,.xls,.csv" class="hidden" />
-              </label>
-
-              <div class="rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
-                <p id="parseInfo">Belum ada file yang dipilih.</p>
-                <p id="periodInfo" class="mt-1">Periode: -</p>
-              </div>
-
-              <button id="publishBtn" disabled class="w-full rounded-lg bg-slate-400 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
-                Publish Stock ke Sales
-              </button>
-            </div>
-          </section>
+        <div id="loginBox" class="mt-4 space-y-3">
+          <input id="adminEmail" type="email" placeholder="Email admin" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100" />
+          <input id="adminPassword" type="password" placeholder="Password" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100" />
+          <button id="loginBtn" class="w-full rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">
+            Login Admin
+          </button>
         </div>
 
-        <section class="mt-5 rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div class="border-b border-slate-200 p-4">
-            <h2 class="text-lg font-bold text-slate-900">Preview Data Upload</h2>
-            <p class="mt-1 text-sm text-slate-500">Preview menampilkan maksimal 100 baris pertama sebelum data dipublish.</p>
-          </div>
-
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200">
-              <thead class="bg-slate-50">
-                <tr>
-                  <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Kode</th>
-                  <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Nama Barang</th>
-                  <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Satuan</th>
-                  <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Gudang</th>
-                  <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Jumlah</th>
-                  <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Konversi</th>
-                  <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Group</th>
-                </tr>
-              </thead>
-              <tbody id="previewBody" class="divide-y divide-slate-100 bg-white"></tbody>
-            </table>
-          </div>
-        </section>
+        <div id="loggedInBox" class="mt-4 hidden rounded-xl bg-emerald-50 p-4 text-sm text-emerald-800">
+          <p id="loggedInText" class="font-semibold">Sudah login.</p>
+          <button id="logoutBtn" class="mt-3 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
+            Logout
+          </button>
+        </div>
       </section>
-    </main>
-  </div>
 
-  <script>
-    /**************************************************************************
-     * 1. KONFIGURASI SUPABASE
-     **************************************************************************/
-    const SUPABASE_URL = "https://mitjosxpyeydjdrpuszl.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_-wwqDu_np893Rg32XajLEQ_w0-5MvBD";
-
-    const LOW_STOCK_LIMIT = 10;
-
-    const isConfigReady =
-      SUPABASE_URL &&
-      SUPABASE_KEY &&
-      !SUPABASE_URL.includes("ISI_") &&
-      !SUPABASE_KEY.includes("ISI_");
-
-    const sb = isConfigReady
-      ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
-      : null;
-
-    /**************************************************************************
-     * 2. STATE APLIKASI
-     **************************************************************************/
-    const state = {
-      mode: location.hash === "#admin" ? "admin" : "sales",
-      records: [],
-      meta: null,
-      session: null,
-      previewRecords: [],
-      previewPeriod: "",
-      previewSourceFile: "",
-      search: "",
-      statusFilter: "all",
-      warehouseFilter: "all",
-      categoryFilter: "all",
-      page: 1,
-      pageSize: 25
-    };
-
-    /**************************************************************************
-     * 3. ELEMENT HTML
-     **************************************************************************/
-    const el = {
-      configWarning: document.getElementById("configWarning"),
-      statusBox: document.getElementById("statusBox"),
-
-      salesModeBtn: document.getElementById("salesModeBtn"),
-      adminModeBtn: document.getElementById("adminModeBtn"),
-      refreshBtn: document.getElementById("refreshBtn"),
-      salesSection: document.getElementById("salesSection"),
-      adminSection: document.getElementById("adminSection"),
-
-      totalSku: document.getElementById("totalSku"),
-      totalStock: document.getElementById("totalStock"),
-      safeStock: document.getElementById("safeStock"),
-      lowStock: document.getElementById("lowStock"),
-      emptyStock: document.getElementById("emptyStock"),
-      lastUpdateText: document.getElementById("lastUpdateText"),
-
-      searchInput: document.getElementById("searchInput"),
-      statusFilter: document.getElementById("statusFilter"),
-      warehouseFilter: document.getElementById("warehouseFilter"),
-      categoryFilter: document.getElementById("categoryFilter"),
-      pageSizeSelect: document.getElementById("pageSizeSelect"),
-      clearFilterBtn: document.getElementById("clearFilterBtn"),
-      exportCsvBtn: document.getElementById("exportCsvBtn"),
-
-      tableBody: document.getElementById("tableBody"),
-      tableInfo: document.getElementById("tableInfo"),
-      pageIndicator: document.getElementById("pageIndicator"),
-      prevPageBtn: document.getElementById("prevPageBtn"),
-      nextPageBtn: document.getElementById("nextPageBtn"),
-
-      adminEmail: document.getElementById("adminEmail"),
-      adminPassword: document.getElementById("adminPassword"),
-      loginBtn: document.getElementById("loginBtn"),
-      logoutBtn: document.getElementById("logoutBtn"),
-      loginBox: document.getElementById("loginBox"),
-      loggedInBox: document.getElementById("loggedInBox"),
-      loggedInText: document.getElementById("loggedInText"),
-
-      excelInput: document.getElementById("excelInput"),
-      parseInfo: document.getElementById("parseInfo"),
-      periodInfo: document.getElementById("periodInfo"),
-      publishBtn: document.getElementById("publishBtn"),
-      previewBody: document.getElementById("previewBody")
-    };
-
-    /**************************************************************************
-     * 4. INIT
-     **************************************************************************/
-    document.addEventListener("DOMContentLoaded", initApp);
-
-    async function initApp() {
-      bindEvents();
-      renderMode();
-      renderAll();
-
-      if (!isConfigReady) {
-        el.configWarning.classList.remove("hidden");
-        showStatus("Supabase belum dikonfigurasi. Isi SUPABASE_URL dan SUPABASE_KEY di file HTML.", "warning");
-        return;
-      }
-
-      await loadSession();
-      await loadStockData();
-    }
-
-    function bindEvents() {
-      el.salesModeBtn.addEventListener("click", () => switchMode("sales"));
-      el.adminModeBtn.addEventListener("click", () => switchMode("admin"));
-      el.refreshBtn.addEventListener("click", loadStockData);
-
-      el.searchInput.addEventListener("input", () => {
-        state.search = el.searchInput.value.trim().toLowerCase();
-        state.page = 1;
-        renderTable();
-      });
-
-      el.statusFilter.addEventListener("change", () => {
-        state.statusFilter = el.statusFilter.value;
-        state.page = 1;
-        renderTable();
-      });
-
-      el.warehouseFilter.addEventListener("change", () => {
-        state.warehouseFilter = el.warehouseFilter.value;
-        state.page = 1;
-        renderTable();
-      });
-
-      el.categoryFilter.addEventListener("change", () => {
-        state.categoryFilter = el.categoryFilter.value;
-        state.page = 1;
-        renderTable();
-      });
-
-      el.pageSizeSelect.addEventListener("change", () => {
-        state.pageSize = Number(el.pageSizeSelect.value);
-        state.page = 1;
-        renderTable();
-      });
-
-      el.clearFilterBtn.addEventListener("click", clearFilters);
-      el.exportCsvBtn.addEventListener("click", exportFilteredCsv);
-
-      el.prevPageBtn.addEventListener("click", () => {
-        if (state.page > 1) {
-          state.page -= 1;
-          renderTable();
-        }
-      });
-
-      el.nextPageBtn.addEventListener("click", () => {
-        const totalPages = getTotalPages();
-        if (state.page < totalPages) {
-          state.page += 1;
-          renderTable();
-        }
-      });
-
-      el.loginBtn.addEventListener("click", loginAdmin);
-      el.logoutBtn.addEventListener("click", logoutAdmin);
-      el.excelInput.addEventListener("change", handleExcelUpload);
-      el.publishBtn.addEventListener("click", publishPreviewRecords);
-    }
-
-    /**************************************************************************
-     * 5. MODE SALES / ADMIN
-     **************************************************************************/
-    function switchMode(mode) {
-      state.mode = mode;
-      location.hash = mode === "admin" ? "admin" : "";
-      renderMode();
-    }
-
-    function renderMode() {
-      if (state.mode === "admin") {
-        el.salesSection.classList.add("hidden");
-        el.adminSection.classList.remove("hidden");
-      } else {
-        el.salesSection.classList.remove("hidden");
-        el.adminSection.classList.add("hidden");
-      }
-    }
-
-    /**************************************************************************
-     * 6. SUPABASE AUTH
-     **************************************************************************/
-    async function loadSession() {
-      const { data } = await sb.auth.getSession();
-      state.session = data.session || null;
-      renderAuthState();
-
-      sb.auth.onAuthStateChange((_event, session) => {
-        state.session = session;
-        renderAuthState();
-      });
-    }
-
-    async function loginAdmin() {
-      const email = el.adminEmail.value.trim();
-      const password = el.adminPassword.value;
-
-      if (!email || !password) {
-        showStatus("Isi email dan password admin.", "warning");
-        return;
-      }
-
-      const { data, error } = await sb.auth.signInWithPassword({ email, password });
-
-      if (error) {
-        showStatus(`Login gagal: ${error.message}`, "error");
-        return;
-      }
-
-      state.session = data.session;
-      el.adminPassword.value = "";
-      renderAuthState();
-      showStatus("Login admin berhasil.", "success");
-    }
-
-    async function logoutAdmin() {
-      await sb.auth.signOut();
-      state.session = null;
-      renderAuthState();
-      showStatus("Logout berhasil.", "success");
-    }
-
-    function renderAuthState() {
-      const user = state.session?.user;
-
-      if (user) {
-        el.loginBox.classList.add("hidden");
-        el.loggedInBox.classList.remove("hidden");
-        el.loggedInText.textContent = `Login sebagai ${user.email}`;
-      } else {
-        el.loginBox.classList.remove("hidden");
-        el.loggedInBox.classList.add("hidden");
-      }
-    }
-
-    /**************************************************************************
-     * 7. LOAD DATA ONLINE
-     **************************************************************************/
-    async function loadStockData() {
-      if (!isConfigReady) return;
-
-      showStatus("Memuat data stock online...", "success");
-
-      const itemsResult = await sb
-        .from("stock_items")
-        .select("*")
-        .order("name", { ascending: true });
-
-      const metaResult = await sb
-        .from("stock_meta")
-        .select("*")
-        .eq("id", "current")
-        .maybeSingle();
-
-      if (itemsResult.error) {
-        showStatus(`Gagal memuat stock: ${itemsResult.error.message}`, "error");
-        return;
-      }
-
-      state.records = (itemsResult.data || []).map(normalizeOnlineRecord).filter(Boolean);
-      state.meta = metaResult.data || null;
-      state.page = 1;
-
-      renderAll();
-      showStatus(`Data stock berhasil dimuat. Total ${state.records.length.toLocaleString("id-ID")} baris.`, "success");
-    }
-
-    function normalizeOnlineRecord(row) {
-      const name = cleanCell(row.name);
-      if (!name) return null;
-
-      return {
-        id: cleanCell(row.id),
-        code: cleanCell(row.code) || "-",
-        name,
-        unit: cleanCell(row.unit) || "PCS",
-        warehouse: cleanCell(row.warehouse) || "-",
-        qty: parseNumber(row.qty),
-        qty_conversion: cleanCell(row.qty_conversion) || "-",
-        category: cleanCell(row.category) || "-",
-        source_sheet: cleanCell(row.source_sheet)
-      };
-    }
-
-    /**************************************************************************
-     * 8. UPLOAD DAN PARSING EXCEL
-     **************************************************************************/
-    async function handleExcelUpload(event) {
-      const file = event.target.files?.[0];
-      if (!file) return;
-
-      try {
-        const parsed = await parseExcelFile(file);
-
-        state.previewRecords = parsed.records;
-        state.previewPeriod = parsed.periodText;
-        state.previewSourceFile = file.name;
-
-        el.parseInfo.textContent = `File: ${file.name}. Data terbaca: ${parsed.records.length.toLocaleString("id-ID")} baris. Baris diabaikan: ${parsed.ignored.toLocaleString("id-ID")}.`;
-        el.periodInfo.textContent = `Periode: ${parsed.periodText || "-"}`;
-
-        renderPreview();
-        setPublishButton(parsed.records.length > 0);
-
-        showStatus("File Excel berhasil dibaca. Cek preview, lalu klik Publish Stock ke Sales.", "success");
-      } catch (error) {
-        console.error(error);
-        showStatus(`Gagal membaca Excel: ${error.message}`, "error");
-      } finally {
-        event.target.value = "";
-      }
-    }
-
-    async function parseExcelFile(file) {
-      const buffer = await file.arrayBuffer();
-      const workbook = XLSX.read(buffer, {
-        type: "array",
-        cellDates: true,
-        raw: true
-      });
-
-      let records = [];
-      let ignored = 0;
-      let periodText = "";
-
-      for (const sheetName of workbook.SheetNames) {
-        const worksheet = workbook.Sheets[sheetName];
-        const rows = XLSX.utils.sheet_to_json(worksheet, {
-          header: 1,
-          raw: true,
-          defval: ""
-        });
-
-        if (!rows.length) continue;
-        if (!periodText) periodText = extractPeriodText(rows);
-
-        const headerIndex = findHeaderRowIndex(rows);
-        if (headerIndex === -1) {
-          ignored += rows.length;
-          continue;
-        }
-
-        const headers = rows[headerIndex].map(cleanCell);
-        const col = buildColumnMap(headers);
-
-        if (col.code === -1 || col.name === -1 || col.qty === -1) {
-          ignored += rows.length - headerIndex - 1;
-          continue;
-        }
-
-        let currentCategory = "";
-        let lastItem = null;
-
-        for (let i = headerIndex + 1; i < rows.length; i++) {
-          const row = rows[i] || [];
-
-          if (isEmptyRow(row) || isIgnoredReportRow(row)) {
-            ignored += 1;
-            continue;
-          }
-
-          const categoryCandidate = detectCategoryRow(row, col);
-          if (categoryCandidate) {
-            currentCategory = categoryCandidate;
-            lastItem = null;
-            continue;
-          }
-
-          const codeRaw = cleanCell(row[col.code]);
-          const nameRaw = cleanCell(row[col.name]);
-          const unitRaw = col.unit === -1 ? "" : cleanCell(row[col.unit]);
-          const warehouseRaw = col.warehouse === -1 ? "" : cleanCell(row[col.warehouse]);
-          const conversionRaw = col.conversion === -1 ? "" : cleanCell(row[col.conversion]);
-          const qty = parseNumber(row[col.qty]);
-
-          if (codeRaw && nameRaw) {
-            lastItem = { code: codeRaw, name: nameRaw, unit: unitRaw };
-          }
-
-          let code = codeRaw;
-          let name = nameRaw;
-          let unit = unitRaw;
-
-          if ((!code || !name) && lastItem && warehouseRaw && Number.isFinite(qty)) {
-            code = lastItem.code;
-            name = lastItem.name;
-            unit = unit || lastItem.unit;
-          }
-
-          if (!name || !Number.isFinite(qty)) {
-            ignored += 1;
-            continue;
-          }
-
-          if (looksLikeTotalOrHeader(code) || looksLikeTotalOrHeader(name)) {
-            ignored += 1;
-            continue;
-          }
-
-          records.push({
-            id: makeId(code, name, warehouseRaw || "-"),
-            code: code || "-",
-            name,
-            unit: unit || "PCS",
-            warehouse: warehouseRaw || "-",
-            qty,
-            qty_conversion: conversionRaw || "-",
-            category: currentCategory || "-",
-            source_sheet: sheetName
-          });
-        }
-      }
-
-      return {
-        records: mergeDuplicateStock(records),
-        ignored,
-        periodText
-      };
-    }
-
-    function extractPeriodText(rows) {
-      for (let i = 0; i < Math.min(rows.length, 20); i++) {
-        const text = rowText(rows[i]);
-        if (normalizeText(text).includes("PERIODE")) return text.replace(/\s+/g, " ").trim();
-      }
-      return "";
-    }
-
-    function findHeaderRowIndex(rows) {
-      for (let i = 0; i < Math.min(rows.length, 80); i++) {
-        const cells = rows[i].map((cell) => canonical(cleanCell(cell)));
-        const hasBarang = cells.includes("BARANG");
-        const hasSatuan = cells.includes("SATUAN");
-        const hasGudang = cells.includes("GUDANG");
-        const hasJumlah = cells.includes("JUMLAH");
-
-        if (hasBarang && hasSatuan && hasGudang && hasJumlah) return i;
-      }
-      return -1;
-    }
-
-    function buildColumnMap(headers) {
-      const cells = headers.map(canonical);
-      const indexOf = (target) => cells.indexOf(target);
-
-      const code = indexOf("BARANG");
-      let name = findFirstIndex(cells, ["NAMABARANG", "NAMAITEM", "ITEM", "PRODUK", "NAMAPRODUK"]);
-      if (name === -1 && code !== -1) name = code + 1;
-
-      let qty = -1;
-      let conversion = -1;
-
-      for (let i = 0; i < cells.length; i++) {
-        if (cells[i] === "JUMLAH" && qty === -1) qty = i;
-        if (cells[i] === "JUMLAHKONVERSI") conversion = i;
-      }
-
-      return {
-        code,
-        name,
-        unit: indexOf("SATUAN"),
-        warehouse: indexOf("GUDANG"),
-        qty,
-        conversion
-      };
-    }
-
-    function findFirstIndex(values, candidates) {
-      for (const candidate of candidates) {
-        const index = values.indexOf(candidate);
-        if (index !== -1) return index;
-      }
-      return -1;
-    }
-
-    function detectCategoryRow(row, col) {
-      const nonEmpty = row.map(cleanCell).filter(Boolean);
-      if (nonEmpty.length !== 1) return "";
-
-      const text = nonEmpty[0];
-      const normalized = normalizeText(text);
-      const qtyValue = parseNumber(row[col.qty]);
-
-      if (!text || text === "-") return "";
-      if (/^\d+([.,]\d+)?$/.test(text)) return "";
-      if (Number.isFinite(qtyValue)) return "";
-      if (looksLikeTotalOrHeader(text)) return "";
-      if (normalized.includes("GARUDA ABADI SINERGI")) return "";
-      if (normalized.includes("LAPORAN REKAP STOK")) return "";
-      if (normalized.includes("PERIODE")) return "";
-
-      return text;
-    }
-
-    function isIgnoredReportRow(row) {
-      const text = normalizeText(rowText(row));
-      if (!text || text === "-") return true;
-      if (text.includes("GARUDA ABADI SINERGI")) return true;
-      if (text.includes("LAPORAN REKAP STOK")) return true;
-      if (text.includes("PERIODE")) return true;
-      if (text.includes("BARANG SATUAN GUDANG JUMLAH")) return true;
-      return false;
-    }
-
-    function looksLikeTotalOrHeader(value) {
-      const text = normalizeText(value);
-      return [
-        "BARANG",
-        "SATUAN",
-        "GUDANG",
-        "JUMLAH",
-        "JUMLAH KONVERSI",
-        "TOTAL",
-        "SUBTOTAL",
-        "GRAND TOTAL",
-        "JUMLAH TOTAL"
-      ].includes(text);
-    }
-
-    function mergeDuplicateStock(records) {
-      const map = new Map();
-
-      for (const record of records) {
-        if (!map.has(record.id)) {
-          map.set(record.id, { ...record });
-        } else {
-          const current = map.get(record.id);
-          current.qty += record.qty;
-          if ((!current.qty_conversion || current.qty_conversion === "-") && record.qty_conversion) {
-            current.qty_conversion = record.qty_conversion;
-          }
-        }
-      }
-
-      return Array.from(map.values()).sort((a, b) => {
-        const byName = a.name.localeCompare(b.name, "id-ID");
-        if (byName !== 0) return byName;
-        return a.warehouse.localeCompare(b.warehouse, "id-ID");
-      });
-    }
-
-    /**************************************************************************
-     * 9. PUBLISH DATA KE SUPABASE
-     **************************************************************************/
-    async function publishPreviewRecords() {
-      if (!isConfigReady) return;
-
-      if (!state.session) {
-        showStatus("Login admin dulu sebelum publish.", "warning");
-        return;
-      }
-
-      if (!state.previewRecords.length) {
-        showStatus("Tidak ada data preview untuk dipublish.", "warning");
-        return;
-      }
-
-      const ok = confirm(
-        `Publish ${state.previewRecords.length.toLocaleString("id-ID")} baris stock ke sales?\n\nData stock online lama akan diganti dengan data terbaru.`
-      );
-
-      if (!ok) return;
-
-      setPublishButton(false);
-      showStatus("Sedang publish stock ke Supabase...", "success");
-
-      const { data, error } = await sb.rpc("replace_stock_items", {
-        p_items: state.previewRecords,
-        p_period_text: state.previewPeriod,
-        p_source_file: state.previewSourceFile
-      });
-
-      if (error) {
-        setPublishButton(true);
-        showStatus(`Publish gagal: ${error.message}`, "error");
-        return;
-      }
-
-      showStatus(`Publish berhasil. Total data online: ${Number(data.total || 0).toLocaleString("id-ID")} baris.`, "success");
-      resetPreview();
-      await loadStockData();
-      switchMode("sales");
-    }
-
-    function setPublishButton(isEnabled) {
-      el.publishBtn.disabled = !isEnabled;
-      el.publishBtn.className = isEnabled
-        ? "w-full rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
-        : "w-full rounded-lg bg-slate-400 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60";
-    }
-
-    function resetPreview() {
-      state.previewRecords = [];
-      state.previewPeriod = "";
-      state.previewSourceFile = "";
-      el.parseInfo.textContent = "Belum ada file yang dipilih.";
-      el.periodInfo.textContent = "Periode: -";
-      setPublishButton(false);
-      renderPreview();
-    }
-
-    /**************************************************************************
-     * 10. RENDER UI
-     **************************************************************************/
-    function renderAll() {
-      renderFilters();
-      renderCards();
-      renderTable();
-      renderPreview();
-    }
-
-    function renderCards() {
-      const totalSku = state.records.length;
-      const totalStock = state.records.reduce((sum, row) => sum + Number(row.qty || 0), 0);
-      const safeStock = state.records.filter((row) => getStockStatus(row.qty) === "safe").length;
-      const lowStock = state.records.filter((row) => getStockStatus(row.qty) === "low").length;
-      const emptyStock = state.records.filter((row) => getStockStatus(row.qty) === "empty").length;
-
-      el.totalSku.textContent = totalSku.toLocaleString("id-ID");
-      el.totalStock.textContent = formatNumber(totalStock);
-      el.safeStock.textContent = safeStock.toLocaleString("id-ID");
-      el.lowStock.textContent = lowStock.toLocaleString("id-ID");
-      el.emptyStock.textContent = emptyStock.toLocaleString("id-ID");
-
-      if (state.meta?.updated_at) {
-        const period = state.meta.period_text ? ` · ${state.meta.period_text}` : "";
-        el.lastUpdateText.textContent = `Update terakhir: ${formatDateTimeID(state.meta.updated_at)}${period}`;
-      } else {
-        el.lastUpdateText.textContent = "Update terakhir: -";
-      }
-    }
-
-    function renderFilters() {
-      renderSelectOptions(el.warehouseFilter, uniqueValues("warehouse"), "Semua Gudang", state.warehouseFilter);
-      renderSelectOptions(el.categoryFilter, uniqueValues("category"), "Semua Group", state.categoryFilter);
-    }
-
-    function renderSelectOptions(select, values, defaultLabel, selectedValue) {
-      select.innerHTML = `
-        <option value="all">${escapeHtml(defaultLabel)}</option>
-        ${values.map((value) => `
-          <option value="${escapeHtml(value)}" ${value === selectedValue ? "selected" : ""}>
-            ${escapeHtml(value)}
-          </option>
-        `).join("")}
-      `;
-    }
-
-    function renderTable() {
-      const rows = getFilteredRows();
-      const totalPages = Math.max(1, Math.ceil(rows.length / state.pageSize));
-
-      if (state.page > totalPages) state.page = totalPages;
-
-      const start = (state.page - 1) * state.pageSize;
-      const end = start + state.pageSize;
-      const pageRows = rows.slice(start, end);
-
-      if (!pageRows.length) {
-        el.tableBody.innerHTML = `
-          <tr>
-            <td colspan="7" class="px-4 py-10 text-center text-sm text-slate-500">
-              Tidak ada data stock untuk ditampilkan.
-            </td>
-          </tr>
-        `;
-      } else {
-        el.tableBody.innerHTML = pageRows.map(renderStockRow).join("");
-      }
-
-      const showingStart = rows.length ? start + 1 : 0;
-      const showingEnd = Math.min(end, rows.length);
-
-      el.tableInfo.textContent = `Menampilkan ${showingStart.toLocaleString("id-ID")} - ${showingEnd.toLocaleString("id-ID")} dari ${rows.length.toLocaleString("id-ID")} data`;
-      el.pageIndicator.textContent = `${state.page} / ${totalPages}`;
-      el.prevPageBtn.disabled = state.page <= 1;
-      el.nextPageBtn.disabled = state.page >= totalPages;
-    }
-
-    function renderStockRow(row) {
-      return `
-        <tr class="hover:bg-slate-50">
-          <td class="whitespace-nowrap px-4 py-3 text-sm font-semibold text-slate-700">${escapeHtml(row.code)}</td>
-          <td class="min-w-80 px-4 py-3">
-            <div class="text-sm font-semibold text-slate-900">${escapeHtml(row.name)}</div>
-            <div class="mt-0.5 text-xs text-slate-500">${escapeHtml(row.unit)}</div>
-          </td>
-          <td class="whitespace-nowrap px-4 py-3 text-lg font-bold text-slate-900">${formatNumber(row.qty)}</td>
-          <td class="whitespace-nowrap px-4 py-3 text-sm text-slate-700">${escapeHtml(row.qty_conversion)}</td>
-          <td class="whitespace-nowrap px-4 py-3 text-sm text-slate-600">${escapeHtml(row.warehouse)}</td>
-          <td class="whitespace-nowrap px-4 py-3 text-sm text-slate-600">${escapeHtml(row.category)}</td>
-          <td class="whitespace-nowrap px-4 py-3 text-sm">
-            <span class="rounded-full px-2.5 py-1 text-xs font-bold ${getStockBadgeClass(row.qty)}">
-              ${getStockStatusLabel(row.qty)}
-            </span>
-          </td>
-        </tr>
-      `;
-    }
-
-    function renderPreview() {
-      const rows = state.previewRecords.slice(0, 100);
-
-      if (!rows.length) {
-        el.previewBody.innerHTML = `
-          <tr>
-            <td colspan="7" class="px-4 py-10 text-center text-sm text-slate-500">
-              Preview akan tampil setelah upload file Excel.
-            </td>
-          </tr>
-        `;
-        return;
-      }
-
-      el.previewBody.innerHTML = rows.map((row) => `
-        <tr class="hover:bg-slate-50">
-          <td class="whitespace-nowrap px-4 py-3 text-sm font-semibold text-slate-700">${escapeHtml(row.code)}</td>
-          <td class="min-w-80 px-4 py-3 text-sm text-slate-900">${escapeHtml(row.name)}</td>
-          <td class="whitespace-nowrap px-4 py-3 text-sm text-slate-600">${escapeHtml(row.unit)}</td>
-          <td class="whitespace-nowrap px-4 py-3 text-sm text-slate-600">${escapeHtml(row.warehouse)}</td>
-          <td class="whitespace-nowrap px-4 py-3 text-sm font-bold text-slate-900">${formatNumber(row.qty)}</td>
-          <td class="whitespace-nowrap px-4 py-3 text-sm text-slate-600">${escapeHtml(row.qty_conversion)}</td>
-          <td class="whitespace-nowrap px-4 py-3 text-sm text-slate-600">${escapeHtml(row.category)}</td>
-        </tr>
-      `).join("");
-    }
-
-    /**************************************************************************
-     * 11. FILTER, PAGINATION, EXPORT
-     **************************************************************************/
-    function getFilteredRows() {
-      let rows = [...state.records];
-
-      if (state.statusFilter === "available") {
-        rows = rows.filter((row) => Number(row.qty) > 0);
-      } else if (state.statusFilter !== "all") {
-        rows = rows.filter((row) => getStockStatus(row.qty) === state.statusFilter);
-      }
-
-      if (state.warehouseFilter !== "all") {
-        rows = rows.filter((row) => row.warehouse === state.warehouseFilter);
-      }
-
-      if (state.categoryFilter !== "all") {
-        rows = rows.filter((row) => row.category === state.categoryFilter);
-      }
-
-      if (state.search) {
-        rows = rows.filter((row) => {
-          const text = [
-            row.code,
-            row.name,
-            row.unit,
-            row.warehouse,
-            row.qty,
-            row.qty_conversion,
-            row.category
-          ].join(" ").toLowerCase();
-
-          return text.includes(state.search);
-        });
-      }
-
-      return rows;
-    }
-
-    function clearFilters() {
-      state.search = "";
-      state.statusFilter = "all";
-      state.warehouseFilter = "all";
-      state.categoryFilter = "all";
-      state.page = 1;
-
-      el.searchInput.value = "";
-      el.statusFilter.value = "all";
-      el.warehouseFilter.value = "all";
-      el.categoryFilter.value = "all";
-
-      renderTable();
-    }
-
-    function getTotalPages() {
-      return Math.max(1, Math.ceil(getFilteredRows().length / state.pageSize));
-    }
-
-    function exportFilteredCsv() {
-      const rows = getFilteredRows();
-
-      if (!rows.length) {
-        showStatus("Tidak ada data untuk diexport.", "warning");
-        return;
-      }
-
-      const csvRows = [
-        ["Kode", "Nama Barang", "Satuan", "Gudang", "Jumlah", "Jumlah Konversi", "Group", "Status"],
-        ...rows.map((row) => [
-          row.code,
-          row.name,
-          row.unit,
-          row.warehouse,
-          row.qty,
-          row.qty_conversion,
-          row.category,
-          getStockStatusLabel(row.qty)
-        ])
-      ];
-
-      const csv = csvRows.map((row) => row.map(csvEscape).join(",")).join("\n");
-      const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      const timestamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
-
-      a.href = url;
-      a.download = `stock-sales-${timestamp}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    }
-
-    /**************************************************************************
-     * 12. HELPER STOCK
-     **************************************************************************/
-    function uniqueValues(field) {
-      const set = new Set();
-
-      for (const row of state.records) {
-        const value = cleanCell(row[field]);
-        if (value && value !== "-") set.add(value);
-      }
-
-      return Array.from(set).sort((a, b) => a.localeCompare(b, "id-ID"));
-    }
-
-    function getStockStatus(qty) {
-      const number = Number(qty || 0);
-      if (number <= 0) return "empty";
-      if (number <= LOW_STOCK_LIMIT) return "low";
-      return "safe";
-    }
-
-    function getStockStatusLabel(qty) {
-      const status = getStockStatus(qty);
-      if (status === "empty") return "Kosong";
-      if (status === "low") return "Rendah";
-      return "Aman";
-    }
-
-    function getStockBadgeClass(qty) {
-      const status = getStockStatus(qty);
-      if (status === "empty") return "bg-rose-100 text-rose-700";
-      if (status === "low") return "bg-amber-100 text-amber-700";
-      return "bg-emerald-100 text-emerald-700";
-    }
-
-    function makeId(code, name, warehouse) {
-      return [
-        normalizeForId(code || name),
-        normalizeForId(name),
-        normalizeForId(warehouse)
-      ].join("|");
-    }
-
-    /**************************************************************************
-     * 13. HELPER FORMAT DATA
-     **************************************************************************/
-    function parseNumber(value) {
-      if (typeof value === "number") return value;
-
-      const text = cleanCell(value);
-      if (!text) return NaN;
-
-      let normalized = text.replace(/[^\d,.-]/g, "");
-
-      if (normalized.includes(",") && normalized.includes(".")) {
-        normalized = normalized.replace(/\./g, "").replace(",", ".");
-      } else if (normalized.includes(",")) {
-        normalized = normalized.replace(",", ".");
-      }
-
-      return Number(normalized);
-    }
-
-    function cleanCell(value) {
-      if (value === null || value === undefined) return "";
-      return String(value).replace(/\u00A0/g, " ").replace(/\s+/g, " ").trim();
-    }
-
-    function normalizeForId(value) {
-      return cleanCell(value).toUpperCase().replace(/\s+/g, " ").trim();
-    }
-
-    function normalizeText(value) {
-      return cleanCell(value).toUpperCase().replace(/[._-]+/g, " ").replace(/\s+/g, " ").trim();
-    }
-
-    function canonical(value) {
-      return normalizeText(value).replace(/[^A-Z0-9]/g, "");
-    }
-
-    function rowText(row) {
-      return (row || []).map(cleanCell).filter(Boolean).join(" ");
-    }
-
-    function isEmptyRow(row) {
-      return (row || []).every((cell) => !cleanCell(cell));
-    }
-
-    function formatNumber(value) {
-      const number = Number(value);
-      if (!Number.isFinite(number)) return "0";
-      return number.toLocaleString("id-ID", { maximumFractionDigits: 2 });
-    }
-
-    function formatDateTimeID(iso) {
-      const date = new Date(iso);
-      if (Number.isNaN(date.getTime())) return "-";
-
-      return date.toLocaleString("id-ID", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit"
-      });
-    }
-
-    function csvEscape(value) {
-      const text = cleanCell(value);
-      return `"${text.replaceAll('"', '""')}"`;
-    }
-
-    function escapeHtml(value) {
-      return cleanCell(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-    }
-
-    function showStatus(message, type = "success") {
-      const styles = {
-        success: "border-emerald-200 bg-emerald-50 text-emerald-800",
-        warning: "border-amber-200 bg-amber-50 text-amber-800",
-        error: "border-rose-200 bg-rose-50 text-rose-800"
-      };
-
-      el.statusBox.className = `mb-5 rounded-xl border px-4 py-3 text-sm ${styles[type] || styles.success}`;
-      el.statusBox.textContent = message;
-      el.statusBox.classList.remove("hidden");
-    }
-  </script>
-</body>
-</html>
+      <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 class="text-lg font-bold text-slate-900">Upload Excel Stock</h2>
+        <p class="mt-1 text-sm text-slate-500">Upload file LAPORAN REKAP STOK. Data lama akan diganti setelah klik Publish.</p>
+
+        <div class="mt-4 space-y-3">
+          <label class="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center hover:bg-slate-100">
+            <span class="text-sm font-semibold text-slate-700">Klik untuk pilih file Excel</span>
+            <span class="mt-1 text-xs text-slate-500">Format .xlsx, .xls, atau .csv</span>
+            <input id="excelInput" type="file" accept=".xlsx,.xls,.csv" class="hidden" />
+          </label>
+
+          <div class="rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
+            <p id="parseInfo">Belum ada file yang dipilih.</p>
+            <p id="periodInfo" class="mt-1">Periode: -</p>
+          </div>
+
+          <button id="publishBtn" disabled class="w-full rounded-lg bg-slate-400 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
+            Publish Stock ke Sales
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <section class="mt-5 rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div class="border-b border-slate-200 p-4">
+        <h2 class="text-lg font-bold text-slate-900">Preview Data Upload</h2>
+        <p class="mt-1 text-sm text-slate-500">Preview menampilkan maksimal 100 baris pertama sebelum data dipublish.</p>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-200">
+          <thead class="bg-slate-50">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Kode</th>
+              <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Nama Barang</th>
+              <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Satuan</th>
+              <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Gudang</th>
+              <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Jumlah</th>
+              <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Konversi</th>
+              <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Group</th>
+            </tr>
+          </thead>
+          <tbody id="previewBody" class="divide-y divide-slate-100 bg-white"></tbody>
+        </table>
+      </div>
+    </section>
+  </section>
+</main>

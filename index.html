@@ -65,6 +65,27 @@
       <section id="statusBox" class="hidden mb-5 rounded-xl border px-4 py-3 text-sm"></section>
 
       <section id="salesSection">
+        <section id="salesLoginSection" class="mb-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 class="text-lg font-bold text-slate-900">Login Sales</h2>
+          <p class="mt-1 text-sm text-slate-500">Login diperlukan agar sales bisa melihat stock online terbaru.</p>
+
+          <div id="salesLoginBox" class="mt-4 space-y-3">
+            <input id="salesEmail" type="email" placeholder="Email sales" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100" />
+            <input id="salesPassword" type="password" placeholder="Password" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100" />
+            <button id="salesLoginBtn" class="w-full rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">
+              Login Sales
+            </button>
+          </div>
+
+          <div id="salesLoggedInBox" class="mt-4 hidden rounded-xl bg-emerald-50 p-4 text-sm text-emerald-800">
+            <p id="salesLoggedInText" class="font-semibold">Sales sudah login.</p>
+            <button id="salesLogoutBtn" class="mt-3 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
+              Logout Sales
+            </button>
+          </div>
+        </section>
+
+        <div id="salesContent" class="hidden">
         <section class="grid grid-cols-1 gap-4 md:grid-cols-5">
           <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p class="text-sm font-medium text-slate-500">Total SKU</p>
@@ -181,6 +202,7 @@
             </div>
           </div>
         </section>
+        </div>
       </section>
 
       <section id="adminSection" class="hidden">
@@ -282,6 +304,8 @@
       records: [],
       meta: null,
       session: null,
+      profile: null,
+      role: null,
       previewRecords: [],
       previewPeriod: "",
       previewSourceFile: "",
@@ -305,6 +329,15 @@
       refreshBtn: document.getElementById("refreshBtn"),
       salesSection: document.getElementById("salesSection"),
       adminSection: document.getElementById("adminSection"),
+      salesLoginSection: document.getElementById("salesLoginSection"),
+      salesLoginBox: document.getElementById("salesLoginBox"),
+      salesLoggedInBox: document.getElementById("salesLoggedInBox"),
+      salesLoggedInText: document.getElementById("salesLoggedInText"),
+      salesEmail: document.getElementById("salesEmail"),
+      salesPassword: document.getElementById("salesPassword"),
+      salesLoginBtn: document.getElementById("salesLoginBtn"),
+      salesLogoutBtn: document.getElementById("salesLogoutBtn"),
+      salesContent: document.getElementById("salesContent"),
 
       totalSku: document.getElementById("totalSku"),
       totalStock: document.getElementById("totalStock"),
@@ -359,7 +392,8 @@
       }
 
       await loadSession();
-      await loadStockData();
+      await resolveUserRole();
+      await refreshAppAfterAuth();
     }
 
     function bindEvents() {
@@ -417,8 +451,18 @@
 
       el.loginBtn.addEventListener("click", loginAdmin);
       el.logoutBtn.addEventListener("click", logoutAdmin);
+      el.salesLoginBtn.addEventListener("click", loginSales);
+      el.salesLogoutBtn.addEventListener("click", logoutSales);
       el.excelInput.addEventListener("change", handleExcelUpload);
       el.publishBtn.addEventListener("click", publishPreviewRecords);
+
+      el.salesPassword.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") loginSales();
+      });
+
+      el.adminPassword.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") loginAdmin();
+      });
     }
 
     /**************************************************************************
@@ -446,12 +490,57 @@
     async function loadSession() {
       const { data } = await sb.auth.getSession();
       state.session = data.session || null;
+
+      sb.auth.onAuthStateChange(async (_event, session) => {
+        state.session = session;
+        await resolveUserRole();
+        renderAuthState();
+        await refreshAppAfterAuth();
+      });
+    }
+
+    async function resolveUserRole() {
+      state.role = null;
+      state.profile = null;
+
+      if (!state.session?.user) return;
+
+      const userId = state.session.user.id;
+
+      const adminCheck = await sb
+        .from("app_admins")
+        .select("user_id")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (adminCheck.data) {
+        state.role = "admin";
+        return;
+      }
+
+      const salesCheck = await sb
+        .from("sales_users")
+        .select("user_id, full_name, email, active")
+        .eq("user_id", userId)
+        .eq("active", true)
+        .maybeSingle();
+
+      if (salesCheck.data) {
+        state.role = "sales";
+        state.profile = salesCheck.data;
+      }
+    }
+
+    async function refreshAppAfterAuth() {
       renderAuthState();
 
-      sb.auth.onAuthStateChange((_event, session) => {
-        state.session = session;
-        renderAuthState();
-      });
+      if (state.role === "admin" || state.role === "sales") {
+        await loadStockData();
+      } else {
+        state.records = [];
+        state.meta = null;
+        renderAll();
+      }
     }
 
     async function loginAdmin() {
@@ -466,12 +555,25 @@
       const { data, error } = await sb.auth.signInWithPassword({ email, password });
 
       if (error) {
-        showStatus(`Login gagal: ${error.message}`, "error");
+        showStatus(`Login admin gagal: ${error.message}`, "error");
         return;
       }
 
       state.session = data.session;
       el.adminPassword.value = "";
+
+      await resolveUserRole();
+
+      if (state.role !== "admin") {
+        await sb.auth.signOut();
+        state.session = null;
+        state.role = null;
+        state.profile = null;
+        renderAuthState();
+        showStatus("Akun ini tidak punya akses admin.", "error");
+        return;
+      }
+
       renderAuthState();
       showStatus("Login admin berhasil.", "success");
     }
@@ -479,8 +581,61 @@
     async function logoutAdmin() {
       await sb.auth.signOut();
       state.session = null;
+      state.role = null;
+      state.profile = null;
+      state.records = [];
+      state.meta = null;
       renderAuthState();
+      renderAll();
       showStatus("Logout berhasil.", "success");
+    }
+
+    async function loginSales() {
+      const email = el.salesEmail.value.trim();
+      const password = el.salesPassword.value;
+
+      if (!email || !password) {
+        showStatus("Isi email dan password sales.", "warning");
+        return;
+      }
+
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        showStatus(`Login sales gagal: ${error.message}`, "error");
+        return;
+      }
+
+      state.session = data.session;
+      el.salesPassword.value = "";
+
+      await resolveUserRole();
+
+      if (state.role !== "sales" && state.role !== "admin") {
+        await sb.auth.signOut();
+        state.session = null;
+        state.role = null;
+        state.profile = null;
+        renderAuthState();
+        showStatus("Akun ini tidak punya akses sales/admin.", "error");
+        return;
+      }
+
+      renderAuthState();
+      await refreshAppAfterAuth();
+      showStatus("Login sales berhasil.", "success");
+    }
+
+    async function logoutSales() {
+      await sb.auth.signOut();
+      state.session = null;
+      state.role = null;
+      state.profile = null;
+      state.records = [];
+      state.meta = null;
+      renderAuthState();
+      renderAll();
+      showStatus("Logout sales berhasil.", "success");
     }
 
     function renderAuthState() {
@@ -490,9 +645,29 @@
         el.loginBox.classList.add("hidden");
         el.loggedInBox.classList.remove("hidden");
         el.loggedInText.textContent = `Login sebagai ${user.email}`;
+
+        el.salesLoginBox.classList.add("hidden");
+        el.salesLoggedInBox.classList.remove("hidden");
+        el.salesLoggedInText.textContent =
+          state.role === "sales"
+            ? `Login sales sebagai ${state.profile?.full_name || user.email}`
+            : `Login sebagai ${user.email}`;
       } else {
         el.loginBox.classList.remove("hidden");
         el.loggedInBox.classList.add("hidden");
+
+        el.salesLoginBox.classList.remove("hidden");
+        el.salesLoggedInBox.classList.add("hidden");
+      }
+
+      const canSeeSalesContent = state.role === "sales" || state.role === "admin";
+
+      if (canSeeSalesContent) {
+        el.salesContent.classList.remove("hidden");
+        el.salesLoginSection.classList.add("hidden");
+      } else {
+        el.salesContent.classList.add("hidden");
+        el.salesLoginSection.classList.remove("hidden");
       }
     }
 
@@ -501,6 +676,13 @@
      **************************************************************************/
     async function loadStockData() {
       if (!isConfigReady) return;
+
+      if (state.role !== "sales" && state.role !== "admin") {
+        state.records = [];
+        state.meta = null;
+        renderAll();
+        return;
+      }
 
       showStatus("Memuat data stock online...", "success");
 
@@ -808,7 +990,7 @@
     async function publishPreviewRecords() {
       if (!isConfigReady) return;
 
-      if (!state.session) {
+      if (!state.session || state.role !== "admin") {
         showStatus("Login admin dulu sebelum publish.", "warning");
         return;
       }
